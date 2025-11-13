@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # CONSTANTS
-DASHBOARD_ID = "a11afd6c-98e3-400c-8502-e8662c9b7d6a"  # Holiday Tracker
+HOLIDAY_GOAL_METER_TRACKER = "a11afd6c-98e3-400c-8502-e8662c9b7d6a"  # HOLIDAY GOAL METER TRACKER
+BFCM_DASHBOARD = "4732eb8b-bb17-4862-8635-3e31cbc49022"  # BFCM DASHBOARD
 SLACK_CHANNEL_NAME = "tableau-testing"
 SLACK_CHANNEL_ID = "C09R7BW2146"
 
@@ -54,28 +55,42 @@ def get_tableau_auth_token() -> str:
     return response.json()["credentials"]["token"]
 
 
-def get_dashboard_image(token: str) -> bytes:
+def get_dashboard_image(token: str, dashboard_id: str) -> bytes:
     """
     Fetches the image of the specified Tableau dashboard using the provided
     authentication token.
     """
-    logger.info(f"Fetching Tableau dashboard {DASHBOARD_ID} image...")
+    logger.info(f"Fetching Tableau dashboard {dashboard_id} image...")xw
     url = (
         f"{os.getenv('TABLEAU_HOST')}/api/{os.getenv('TABLEAU_API_VERSION')}/sites/"
-        f"{os.getenv('TABLEAU_SITE_ID')}/views/{DASHBOARD_ID}/image"
+        f"{os.getenv('TABLEAU_SITE_ID')}/views/{dashboard_id}/image"
     )
 
     payload = {}
     headers = {"Accept": "application/json", "X-Tableau-Auth": token}
     response = requests.request("GET", url, headers=headers, data=payload)
-    response.raise_for_status()
+    if response.status_code != 200:
+        logger.error(f"Failed to fetch dashboard image: {response.status_code} — {response.text}")
+        logger.debug(f"Request headers: {response.request.headers}")
+        raise Exception(f"Error fetching dashboard image: {response.status_code} — {response.text}")
     logger.info("Tableau dashboard image fetched successfully.")
     return response.content
 
 
-def post_image_to_slack(image_bytes: bytes, channel: str, text: str):
+def post_image_to_slack(
+        image_bytes: bytes,
+        channel: str,
+        text: str,
+        title: str
+) -> None:
     """
     Uploads an image to Slack and posts it to a specified channel.
+
+    Args:
+        image_bytes (bytes): The binary content of the image to upload.
+        channel (str): The Slack channel ID where the image will be posted.
+        text (str): The text to accompany the image in the post.
+        title (str): The title of the image file.
 
     Steps:
     1. Get an upload URL from Slack.
@@ -112,8 +127,10 @@ def post_image_to_slack(image_bytes: bytes, channel: str, text: str):
     complete_resp = requests.post(
         "https://slack.com/api/files.completeUploadExternal",
         headers={"Authorization": f"Bearer {SLACK_BOT_TOKEN}"},
-        data={
-            "files": f'[{{"id":"{file_id}", "title":"BFCM Dashboard"}}]',
+        json={
+            "files": [
+                {"id": file_id, "title": title}
+            ],
             "channel_id": channel,
             "initial_comment": text,
         },
@@ -129,8 +146,14 @@ def post_image_to_slack(image_bytes: bytes, channel: str, text: str):
 
 if __name__ == "__main__":
     token = get_tableau_auth_token()
-    image = get_dashboard_image(token)
     cst = pytz.timezone('America/Chicago')
     current_time = datetime.now(cst).strftime('%m-%d %H:%M')
-    post_image_to_slack(image, SLACK_CHANNEL_ID, f"🚀 Tableau Dashboard Update - {current_time}")
+
+    # BFCM DASHBOARD
+    image = get_dashboard_image(token, BFCM_DASHBOARD)
+    post_image_to_slack(image, SLACK_CHANNEL_ID, f"⚫💰 BFCM Dashboard Update - {current_time}", "BFCM Dashboard")
+
+    # HOLIDAY GOAL METER TRACKER
+    image = get_dashboard_image(token, HOLIDAY_GOAL_METER_TRACKER)
+    post_image_to_slack(image, SLACK_CHANNEL_ID, f"🎅🎄🎁 Holiday Goal Meter Tracker Update - {current_time}", "Holiday Goal Meter Tracker")
 
