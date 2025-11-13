@@ -60,7 +60,7 @@ def get_dashboard_image(token: str, dashboard_id: str) -> bytes:
     Fetches the image of the specified Tableau dashboard using the provided
     authentication token.
     """
-    logger.info(f"Fetching Tableau dashboard {dashboard_id} image...")xw
+    logger.info(f"Fetching Tableau dashboard {dashboard_id} image...")
     url = (
         f"{os.getenv('TABLEAU_HOST')}/api/{os.getenv('TABLEAU_API_VERSION')}/sites/"
         f"{os.getenv('TABLEAU_SITE_ID')}/views/{dashboard_id}/image"
