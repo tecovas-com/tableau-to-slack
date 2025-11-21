@@ -63,7 +63,7 @@ def get_dashboard_image(token: str, dashboard_id: str) -> bytes:
     logger.info(f"Fetching Tableau dashboard {dashboard_id} image...")
     url = (
         f"{os.getenv('TABLEAU_HOST')}/api/{os.getenv('TABLEAU_API_VERSION')}/sites/"
-        f"{os.getenv('TABLEAU_SITE_ID')}/views/{dashboard_id}/image"
+        f"{os.getenv('TABLEAU_SITE_ID')}/views/{dashboard_id}/image?maxAge=0"
     )
 
     payload = {}
@@ -156,4 +156,3 @@ if __name__ == "__main__":
     # HOLIDAY GOAL METER TRACKER
     image = get_dashboard_image(token, HOLIDAY_GOAL_METER_TRACKER)
     post_image_to_slack(image, SLACK_CHANNEL_ID, f"🎅🎄🎁 Holiday Goal Meter Tracker Update - {current_time}", "Holiday Goal Meter Tracker")
-
