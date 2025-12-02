@@ -149,10 +149,6 @@ if __name__ == "__main__":
     cst = pytz.timezone('America/Chicago')
     current_time = datetime.now(cst).strftime('%m-%d %H:%M')
 
-    # BFCM DASHBOARD
-    image = get_dashboard_image(token, BFCM_DASHBOARD)
-    post_image_to_slack(image, SLACK_CHANNEL_ID, f"⚫💰 BFCM Dashboard Update - {current_time}", "BFCM Dashboard")
-
     # HOLIDAY GOAL METER TRACKER
     image = get_dashboard_image(token, HOLIDAY_GOAL_METER_TRACKER)
     post_image_to_slack(image, SLACK_CHANNEL_ID, f"🎅🎄🎁 Holiday Goal Meter Tracker Update - {current_time}", "Holiday Goal Meter Tracker")
